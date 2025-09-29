@@ -1,5 +1,10 @@
-FROM ubuntu:20.04
-RUN apt update && apt install python3 -y && apt install python3-flask -y
-COPY app.py /tmp
-EXPOSE 8080
-CMD ["python3", "/tmp/app.py"]
+FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+
+COPY . .
+
+CMD ["python", "app.py"]
