@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+    environment {
+     
+        IMAGE_NAME = "waquar1235/python-docker-demo"
+    }
+    stages {
+        stage('Checkout Repo') {
+            steps {
+                git branch: 'master', credentialsId: 'github-cred', url: 'https://github.com/Waquar1235/Jenkins-python-Docker-demo.git'
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t $IMAGE_NAME:$BUILD_NUMBER .'
+            }
+        }
+        stage('Login to DockerHub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'c7dc5d23-cfac-4ed8-9688-14d33be31387', 
+                                          usernameVariable: 'DOCKERHUB_USER', 
+                                          passwordVariable: 'DOCKERHUB_PASS')]){
+                sh 'echo $DOCKERHUB_PASS | docker login -u $DOCKERHUB_USER --password-stdin'
+            }
+                
+            }
+        }
+        stage('Push Image') {
+            steps {
+                sh 'docker push $IMAGE_NAME:$BUILD_NUMBER'
+                sh 'docker tag $IMAGE_NAME:$BUILD_NUMBER $IMAGE_NAME:latest'
+                sh 'docker push $IMAGE_NAME:latest'
+            }
+        }
+        stage('Run Container') {
+            steps {
+                sh 'docker run -d -p 5000:5000 --name python-demo1 --rm $IMAGE_NAME:$BUILD_NUMBER'
+            }
+        }
+    }
+}
